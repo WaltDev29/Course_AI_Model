@@ -1,0 +1,71 @@
+# 드롭아웃을 적용한 CNN으로 MNIST 손글씨 숫자를 분류하는 예제
+
+# Keras가 PyTorch 백엔드로 GPU를 쓰도록 지정한다
+# 이 두 줄은 keras를 import 하기 전에 와야 하며 순서가 바뀌면 무시된다
+import os
+os.environ["KERAS_BACKEND"]="torch"
+
+# 지금 CPU로 도는지 GPU로 도는지 출력한다
+# 위의 백엔드 지정이 적용되지 않으면 여기서 드러난다
+import keras,torch
+print("백엔드:",keras.backend.backend(),"/ 장치:","GPU "+torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
+
+import numpy as np
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers import Conv2D,MaxPooling2D,Flatten,Dense,Dropout
+from keras.optimizers import Adam
+
+# MNIST 데이터셋을 읽고 신경망에 입력할 형태로 변환
+# 채널 축 추가 -> 0~1 정규화 -> 원핫 코드 변환의 3단계는 모든 예제에서 반복된다
+(x_train,y_train),(x_test,y_test)=mnist.load_data()
+x_train=x_train.reshape(60000,28,28,1)
+x_test=x_test.reshape(10000,28,28,1)
+x_train=x_train.astype(np.float32)/255.0
+x_test=x_test.astype(np.float32)/255.0
+y_train=keras.utils.to_categorical(y_train,10)
+y_test=keras.utils.to_categorical(y_test,10)
+
+# 신경망 모델 설계
+# 6-1의 LeNet-5와 달리 컨볼루션을 연달아 두 번 적용하고 드롭아웃을 추가했다
+# 드롭아웃은 학습할 때만 뉴런 일부를 무작위로 꺼서 과잉적합을 억제한다(예측할 때는 동작하지 않음)
+cnn=Sequential()
+cnn.add(Conv2D(32,(3,3),activation='relu',input_shape=(28,28,1)))
+cnn.add(Conv2D(64,(3,3),activation='relu'))
+cnn.add(MaxPooling2D(pool_size=(2,2)))
+cnn.add(Dropout(0.25))  # 특징 맵의 25%를 무작위로 0으로 만든다
+cnn.add(Flatten())
+cnn.add(Dense(128,activation='relu'))
+cnn.add(Dropout(0.5))  # 완전연결층은 매개변수가 많아 더 센 비율을 쓴다
+cnn.add(Dense(10,activation='softmax'))
+
+# 신경망 모델 학습
+cnn.compile(loss='categorical_crossentropy',optimizer=Adam(),metrics=['accuracy'])
+hist=cnn.fit(x_train,y_train,batch_size=128,epochs=12,validation_data=(x_test,y_test),verbose=2)
+
+# 신경망 모델 정확률 평가
+res=cnn.evaluate(x_test,y_test,verbose=0)
+print("정확률은",res[1]*100)
+
+import matplotlib.pyplot as plt
+
+# 정확률 그래프
+# 드롭아웃 덕분에 6-1보다 훈련 곡선과 검증 곡선의 간격이 좁아진다
+plt.plot(hist.history['accuracy'])
+plt.plot(hist.history['val_accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train','Validation'], loc='best')
+plt.grid()
+plt.show()
+
+# 손실 함수 그래프
+plt.plot(hist.history['loss'])
+plt.plot(hist.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train','Validation'], loc='best')
+plt.grid()
+plt.show()
