@@ -15,11 +15,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import sys
+from pathlib import Path
 
 # 8-1이 야후 파이낸스에서 내려받아 저장한 csv를 읽는다
 # 실행 위치와 상관없이 이 스크립트와 같은 폴더를 기준으로 찾는다
-base_dir=os.path.dirname(os.path.abspath(__file__))
-csv_path=os.path.join(base_dir,'BTC_USD.csv')
+BASE_DIR = Path(__file__).resolve().parents[1] / "data"
+csv_path= BASE_DIR / 'BTC_USD.csv'
 
 # 파일이 없으면 원인을 알기 어려운 오류가 나므로 미리 확인하고 안내한다
 if not os.path.isfile(csv_path):
