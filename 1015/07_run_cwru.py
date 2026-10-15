@@ -55,7 +55,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager
 
 # 데이터 위치 : SRC\source_1\ch8 에서 세 단계 위로 올라가면 강의자료 폴더
-DATA_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "data", "cwru"))
+DATA_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "cwru"))
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_cwru")
 
 # 그래프 한글 글꼴 : 윈도는 맑은 고딕, 리눅스는 Noto/나눔을 찾아 씀
